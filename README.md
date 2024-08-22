@@ -39,4 +39,23 @@ Welcome to the **ZeeCare Medical Institute Dashboard** repository! This project 
    ```bash
    git clone https://github.com/your-username/zeecare-medical-institute-dashboard.git
    cd zeecare-medical-institute-dashboard
+
+2. **Install dependencies:**
+
+   ```bash
+   npm install
+
+3. **Start the development server:**
+
+   ```bash
+   npm run dev
+   
+4. **Deployment**
+
+   ```bash
+   npm run build
+
+## Live Link
+
+   [Link](https://hospital-management-system-cwv.netlify.app/)
    
