@@ -43,7 +43,7 @@ Welcome to the **ZeeCare Medical Institute Dashboard** repository! This project 
    ```bash
    git clone https://github.com/princeessjay/HMS_FRONTEND.git
    
-   cd zeecare-medical-institute-dashboard
+   cd HMS_FRONTEND
 
 2. **Install dependencies:**
 
