@@ -59,5 +59,7 @@ Welcome to the **ZeeCare Medical Institute Dashboard** repository! This project 
    ```bash
    npm run build
 
-
+# License
+Licensed under the [MIT license](https://github.com/princeessjay/Modern_Blog_App/blob/main/LICENSE.md).
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
    
