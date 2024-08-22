@@ -41,7 +41,8 @@ Welcome to the **ZeeCare Medical Institute Dashboard** repository! This project 
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/zeecare-medical-institute-dashboard.git
+   git clone https://github.com/princeessjay/HMS_FRONTEND.git
+   
    cd zeecare-medical-institute-dashboard
 
 2. **Install dependencies:**
