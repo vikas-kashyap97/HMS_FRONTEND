@@ -1,3 +1,7 @@
+## Live Link
+
+   [Link](https://hospital-management-system-cwv.netlify.app/)
+
 # ZeeCare Medical Institute Dashboard
 
 Welcome to the **ZeeCare Medical Institute Dashboard** repository! This project is a user-friendly interface designed to enhance patient interaction and streamline healthcare services. Below you'll find details about the project, including setup instructions, features, and technologies used.
@@ -55,7 +59,5 @@ Welcome to the **ZeeCare Medical Institute Dashboard** repository! This project 
    ```bash
    npm run build
 
-## Live Link
 
-   [Link](https://hospital-management-system-cwv.netlify.app/)
    
