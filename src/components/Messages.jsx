@@ -1,26 +1,25 @@
-import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Context } from "../main";
+import { Context } from "../context";
 import { Navigate } from "react-router-dom";
+import { api, getErrorMessage } from "../api";
 
 const Messages = () => {
   const [messages, setMessages] = useState([]);
   const { isAuthenticated } = useContext(Context);
+
   useEffect(() => {
+    if (!isAuthenticated) return;
     const fetchMessages = async () => {
       try {
-        const { data } = await axios.get(
-          "https://hms-backend-deployment-xv3e.onrender.com/api/v1/message/getall",
-          { withCredentials: true }
-        );
-        setMessages(data.messages);
+        const { data } = await api.get("/message/getall");
+        setMessages(data.messages || []);
       } catch (error) {
-        console.log(error.response.data.message);
+        toast.error(getErrorMessage(error));
       }
     };
     fetchMessages();
-  }, []);
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return <Navigate to={"/login"} />;
@@ -30,7 +29,7 @@ const Messages = () => {
     <section className="page messages">
       <h1>MESSAGE</h1>
       <div className="banner">
-        {messages && messages.length > 0 ? (
+        {messages.length > 0 ? (
           messages.map((element) => {
             return (
               <div className="card" key={element._id}>

@@ -1,11 +1,11 @@
-import React, { useContext, useState } from "react";
-import { Context } from "../main";
+import { useContext, useState } from "react";
+import { Context } from "../context";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import axios from "axios";
+import { api, getErrorMessage } from "../api";
 
 const AddNewAdmin = () => {
-  const { isAuthenticated, setIsAuthenticated } = useContext(Context);
+  const { isAuthenticated } = useContext(Context);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -21,30 +21,28 @@ const AddNewAdmin = () => {
   const handleAddNewAdmin = async (e) => {
     e.preventDefault();
     try {
-      await axios
-        .post(
-          "https://hms-backend-deployment-xv3e.onrender.com/api/v1/user/admin/addnew",
-          { firstName, lastName, email, phone, nic, dob, gender, password },
-          {
-            withCredentials: true,
-            headers: { "Content-Type": "application/json" },
-          }
-        )
-        .then((res) => {
-          toast.success(res.data.message);
-          setIsAuthenticated(true);
-          navigateTo("/");
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPhone("");
-          setNic("");
-          setDob("");
-          setGender("");
-          setPassword("");
-        });
+      const res = await api.post("/user/admin/addnew", {
+        firstName,
+        lastName,
+        email,
+        phone,
+        nic,
+        dob,
+        gender,
+        password,
+      });
+      toast.success(res.data.message);
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPhone("");
+      setNic("");
+      setDob("");
+      setGender("");
+      setPassword("");
+      navigateTo("/");
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -74,7 +72,7 @@ const AddNewAdmin = () => {
           </div>
           <div>
             <input
-              type="text"
+              type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
