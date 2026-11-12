@@ -1,11 +1,14 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Context } from "../main";
-import axios from "axios";
+import { Context } from "../context";
+import { api, getErrorMessage } from "../api";
+
+const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
 const AddNewDoctor = () => {
-  const { isAuthenticated, setIsAuthenticated } = useContext(Context);
+  const { isAuthenticated } = useContext(Context);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -49,17 +52,33 @@ const AddNewDoctor = () => {
   ];
 
   const handleAvatar = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
+    // The file dialog can be cancelled, which used to throw in readAsDataURL.
+    if (!file) return;
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      toast.error("Avatar must be a PNG, JPEG or WEBP image.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error("Avatar must be smaller than 5 MB.");
+      e.target.value = "";
+      return;
+    }
     const reader = new FileReader();
-    reader.readAsDataURL(file);
     reader.onload = () => {
       setDocAvatarPreview(reader.result);
       setDocAvatar(file);
     };
+    reader.readAsDataURL(file);
   };
 
   const handleAddNewDoctor = async (e) => {
     e.preventDefault();
+    if (!docAvatar) {
+      toast.error("Doctor avatar required!");
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append("firstName", firstName);
@@ -72,26 +91,23 @@ const AddNewDoctor = () => {
       formData.append("gender", gender);
       formData.append("doctorDepartment", doctorDepartment);
       formData.append("docAvatar", docAvatar);
-      await axios
-        .post("https://hms-backend-deployment-xv3e.onrender.com/api/v1/user/doctor/addnew", formData, {
-          withCredentials: true,
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-        .then((res) => {
-          toast.success(res.data.message);
-          setIsAuthenticated(true);
-          navigateTo("/");
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPhone("");
-          setNic("");
-          setDob("");
-          setGender("");
-          setPassword("");
-        });
+      // Let the browser set the multipart Content-Type (with boundary).
+      const res = await api.post("/user/doctor/addnew", formData);
+      toast.success(res.data.message);
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPhone("");
+      setNic("");
+      setDob("");
+      setGender("");
+      setPassword("");
+      setDoctorDepartment("");
+      setDocAvatar("");
+      setDocAvatarPreview("");
+      navigateTo("/");
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -112,7 +128,11 @@ const AddNewDoctor = () => {
                 }
                 alt="Doctor Avatar"
               />
-              <input type="file" onChange={handleAvatar} />
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleAvatar}
+              />
             </div>
             <div>
               <input
@@ -128,7 +148,7 @@ const AddNewDoctor = () => {
                 onChange={(e) => setLastName(e.target.value)}
               />
               <input
-                type="text"
+                type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

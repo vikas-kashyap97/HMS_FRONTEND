@@ -1,36 +1,39 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../main";
+import { useContext, useEffect, useState } from "react";
+import { Context } from "../context";
 import { Navigate } from "react-router-dom";
-import axios from "axios";
+import { api, getErrorMessage } from "../api";
 import { toast } from "react-toastify";
 import { GoCheckCircleFill } from "react-icons/go";
 import { AiFillCloseCircle } from "react-icons/ai";
 
 const Dashboard = () => {
   const [appointments, setAppointments] = useState([]);
+  const [doctorCount, setDoctorCount] = useState(0);
+  const { isAuthenticated, admin } = useContext(Context);
 
   useEffect(() => {
-    const fetchAppointments = async () => {
+    if (!isAuthenticated) return;
+    const fetchData = async () => {
       try {
-        const { data } = await axios.get(
-          "https://hms-backend-deployment-xv3e.onrender.com/api/v1/appointment/getall",
-          { withCredentials: true }
-        );
-        setAppointments(data.appointments);
+        const [appointmentsRes, doctorsRes] = await Promise.all([
+          api.get("/appointment/getall"),
+          api.get("/user/admin/doctors"),
+        ]);
+        setAppointments(appointmentsRes.data.appointments || []);
+        setDoctorCount((doctorsRes.data.doctors || []).length);
       } catch (error) {
         setAppointments([]);
+        toast.error(getErrorMessage(error));
       }
     };
-    fetchAppointments();
-  }, []);
+    fetchData();
+  }, [isAuthenticated]);
 
   const handleUpdateStatus = async (appointmentId, status) => {
     try {
-      const { data } = await axios.put(
-        `https://hms-backend-deployment-xv3e.onrender.com/api/v1/appointment/update/${appointmentId}`,
-        { status },
-        { withCredentials: true }
-      );
+      const { data } = await api.put(`/appointment/update/${appointmentId}`, {
+        status,
+      });
       setAppointments((prevAppointments) =>
         prevAppointments.map((appointment) =>
           appointment._id === appointmentId
@@ -40,11 +43,10 @@ const Dashboard = () => {
       );
       toast.success(data.message);
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(getErrorMessage(error));
     }
   };
 
-  const { isAuthenticated, admin } = useContext(Context);
   if (!isAuthenticated) {
     return <Navigate to={"/login"} />;
   }
@@ -58,7 +60,7 @@ const Dashboard = () => {
             <div className="content">
               <div>
                 <p>Hello ,</p>
-                <h5>{admin && `${admin.firstName} ${admin.lastName}`} </h5>
+                <h5>{admin?.firstName && `${admin.firstName} ${admin.lastName}`}</h5>
               </div>
               <p>
                 A dedicated healthcare professional at ZeeCare Medical
@@ -70,11 +72,11 @@ const Dashboard = () => {
           </div>
           <div className="secondBox">
             <p>Total Appointments</p>
-            <h3>1500</h3>
+            <h3>{appointments.length}</h3>
           </div>
           <div className="thirdBox">
             <p>Registered Doctors</p>
-            <h3>10</h3>
+            <h3>{doctorCount}</h3>
           </div>
         </div>
         <div className="banner">
@@ -91,12 +93,12 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {appointments && appointments.length > 0
+              {appointments.length > 0
                 ? appointments.map((appointment) => (
                     <tr key={appointment._id}>
                       <td>{`${appointment.firstName} ${appointment.lastName}`}</td>
-                      <td>{appointment.appointment_date.substring(0, 16)}</td>
-                      <td>{`${appointment.doctor.firstName} ${appointment.doctor.lastName}`}</td>
+                      <td>{appointment.appointment_date?.substring(0, 16)}</td>
+                      <td>{`${appointment.doctor?.firstName ?? ""} ${appointment.doctor?.lastName ?? ""}`}</td>
                       <td>{appointment.department}</td>
                       <td>
                         <select
@@ -132,11 +134,14 @@ const Dashboard = () => {
                       </td>
                     </tr>
                   ))
-                : "No Appointments Found!"}
+                : (
+                  <tr>
+                    <td colSpan={6}>No Appointments Found!</td>
+                  </tr>
+                )}
             </tbody>
           </table>
 
-          {}
         </div>
       </section>
     </>

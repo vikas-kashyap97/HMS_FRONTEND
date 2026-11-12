@@ -1,26 +1,27 @@
-import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Context } from "../main";
+import { Context } from "../context";
 import { Navigate } from "react-router-dom";
+import { api, getErrorMessage } from "../api";
 
 const Doctors = () => {
   const [doctors, setDoctors] = useState([]);
   const { isAuthenticated } = useContext(Context);
+
   useEffect(() => {
+    if (!isAuthenticated) return;
     const fetchDoctors = async () => {
       try {
-        const { data } = await axios.get(
-          "https://hms-backend-deployment-xv3e.onrender.com/api/v1/user/doctors",
-          { withCredentials: true }
-        );
-        setDoctors(data.doctors);
+        // Admin-only endpoint: the public /user/doctors list no longer
+        // exposes doctors' email, phone, NIC and DOB.
+        const { data } = await api.get("/user/admin/doctors");
+        setDoctors(data.doctors || []);
       } catch (error) {
-        toast.error(error.response.data.message);
+        toast.error(getErrorMessage(error));
       }
     };
     fetchDoctors();
-  }, []);
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return <Navigate to={"/login"} />;
@@ -29,12 +30,12 @@ const Doctors = () => {
     <section className="page doctors">
       <h1>DOCTORS</h1>
       <div className="banner">
-        {doctors && doctors.length > 0 ? (
+        {doctors.length > 0 ? (
           doctors.map((element) => {
             return (
-              <div className="card">
+              <div className="card" key={element._id}>
                 <img
-                  src={element.docAvatar && element.docAvatar.url}
+                  src={element.docAvatar?.url || "/docHolder.jpg"}
                   alt="doctor avatar"
                 />
                 <h4>{`${element.firstName} ${element.lastName}`}</h4>
@@ -46,7 +47,7 @@ const Doctors = () => {
                     Phone: <span>{element.phone}</span>
                   </p>
                   <p>
-                    DOB: <span>{element.dob.substring(0, 10)}</span>
+                    DOB: <span>{element.dob ? element.dob.substring(0, 10) : "-"}</span>
                   </p>
                   <p>
                     Department: <span>{element.doctorDepartment}</span>
